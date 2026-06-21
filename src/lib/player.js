@@ -122,6 +122,10 @@ export function toggleShuffle() { _shuffle = !_shuffle; notify(); }
 export function patchCurrentLiked(liked) {
   if (_queue[_idx]) { _queue[_idx] = { ..._queue[_idx], liked }; notify(); }
 }
+export function patchCurrentMeta(id, patch) {
+  _queue = _queue.map(t => t.id === id ? { ...t, ...patch } : t);
+  notify();
+}
 export function pause() { audio.pause(); }
 export function resume() { audio.play().catch(() => {}); }
 export function seekToSeconds(sec) { if (!isNaN(sec)) audio.currentTime = sec; }

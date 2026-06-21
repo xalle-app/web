@@ -67,6 +67,11 @@ function ListenMini({ listenRoom, isHost, playerState, selfHideCode, onExpand, o
         )}
       </div>
 
+      {track && playerState?.duration > 0 && (
+        <div className="lmini-progress">
+          <div className="lmini-progress-fill" style={{ width: `${((playerState.progress || 0) * 100).toFixed(1)}%` }} />
+        </div>
+      )}
       <div className="lmini-foot">
         <span className={`lmini-code${(listenRoom.room?.settings?.hideCode || selfHideCode) ? " listen-code-blur" : ""}`}>{listenRoom.code}</span>
         <div className="lmini-members">

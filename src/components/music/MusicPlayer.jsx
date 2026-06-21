@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Repeat1, Shuffle, ChevronDown, X, Heart, Music } from "lucide-react";
 import * as Player from "../../lib/player.js";
 import { api } from "../../lib/api.js";
@@ -15,12 +14,9 @@ function fmt(sec) {
 export default function MusicPlayer({ onOpenLibrary, token, onLikeChange, isListenGuest }) {
   const [state, setState] = useState(Player.getState());
   const [hidden, setHidden] = useState(false);
-  const [showVol, setShowVol] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
   const volRef = useRef(null);
-  const volBtnRef = useRef(null);
-  const volPopupRef = useRef(null);
   const lastTrackId = useRef(null);
 
   useEffect(() => Player.subscribe(s => {
@@ -30,15 +26,6 @@ export default function MusicPlayer({ onOpenLibrary, token, onLikeChange, isList
       setLiked(!!s.current?.liked);
     }
   }), []);
-
-  useEffect(() => {
-    if (!showVol) return;
-    const h = (e) => {
-      if (!volRef.current?.contains(e.target) && !volPopupRef.current?.contains(e.target)) setShowVol(false);
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [showVol]);
 
   useEffect(() => {
     const h = (e) => {
@@ -83,6 +70,10 @@ export default function MusicPlayer({ onOpenLibrary, token, onLikeChange, isList
             : <Music size={14} />
           }
           {playing && <div className="mp-float-playing-dot" />}
+        </div>
+        <div className="mp-float-info">
+          <div className="mp-float-title">{current.title}</div>
+          {current.artist && <div className="mp-float-artist">{current.artist}</div>}
         </div>
         <button className="mp-float-play" onClick={e => { e.stopPropagation(); if (!isListenGuest) Player.toggle(); }}
           style={isListenGuest ? { opacity: 0.4, cursor: "default" } : {}}>
@@ -151,22 +142,12 @@ export default function MusicPlayer({ onOpenLibrary, token, onLikeChange, isList
           <Heart size={16} fill={liked ? "currentColor" : "none"} />
         </button>
         <div className="mp-vol-wrap" ref={volRef}>
-          <button className="mp-btn" ref={volBtnRef} onClick={() => setShowVol(v => !v)} title="Громкость">
+          <button className="mp-btn" onClick={() => Player.setVolume(volume === 0 ? 0.7 : 0)} title="Громкость">
             {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
-          {showVol && volBtnRef.current && createPortal(
-            <div ref={volPopupRef} className="mp-vol-slider-wrap" style={{
-              position: "fixed",
-              bottom: window.innerHeight - volBtnRef.current.getBoundingClientRect().top + 8,
-              right: window.innerWidth - volBtnRef.current.getBoundingClientRect().right,
-              zIndex: 900,
-            }}>
-              <input type="range" min={0} max={1} step={0.02} value={volume}
-                onChange={e => Player.setVolume(parseFloat(e.target.value))}
-                className="mp-vol-slider" />
-            </div>,
-            document.body
-          )}
+          <input type="range" min={0} max={1} step={0.02} value={volume}
+            onChange={e => Player.setVolume(parseFloat(e.target.value))}
+            className="mp-vol-slider" title={`Громкость: ${Math.round(volume * 100)}%`} />
         </div>
         <button className="mp-btn" onClick={() => setHidden(true)} title="Свернуть плеер">
           <ChevronDown size={16} />

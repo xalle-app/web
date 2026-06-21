@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Play, Pause, Heart, Trash2, Upload, Music, CloudUpload, Share2, ListMusic, Plus, ChevronLeft, Globe, Lock, MoreHorizontal, Users, QrCode, Search, X as XIcon, SlidersHorizontal } from "lucide-react";
+import { Play, Pause, Heart, Trash2, Upload, Music, CloudUpload, Share2, ListMusic, Plus, ChevronLeft, Globe, Lock, MoreHorizontal, Users, Search, X as XIcon, SlidersHorizontal, Pencil, Clock } from "lucide-react";
 import { api } from "../../lib/api.js";
 import { API_BASE, assetUrl } from "../../lib/config.js";
 import * as Player from "../../lib/player.js";
@@ -196,6 +196,100 @@ function UploadModal({ token, onClose, onUploaded }) {
   );
 }
 
+// ─── Edit Track Modal ─────────────────────────────────────────
+function EditTrackModal({ track, token, onClose, onSaved }) {
+  const [title, setTitle] = useState(track.title || "");
+  const [artist, setArtist] = useState(track.artist || "");
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(track.coverUrl ? assetUrl(track.coverUrl) : null);
+  const [removeCover, setRemoveCover] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const coverRef = useRef(null);
+  const toast = useToast();
+
+  const pickCover = (file) => {
+    if (!file) return;
+    setRemoveCover(false);
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveCover = () => {
+    setRemoveCover(true);
+    setCoverFile(null);
+    setCoverPreview(null);
+  };
+
+  const submit = async () => {
+    if (!title.trim()) { setErr("Название не может быть пустым"); return; }
+    setBusy(true); setErr("");
+    try {
+      const fd = new FormData();
+      fd.append("title", title.trim());
+      fd.append("artist", artist.trim());
+      if (coverFile) fd.append("cover", coverFile);
+      if (removeCover && !coverFile) fd.append("removeCover", "1");
+      const res = await fetch(`${API_BASE}/api/v2/tracks/${track.id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ошибка");
+      toast("Трек обновлён", { type: "success" });
+      onSaved(data);
+      onClose();
+    } catch (e) { setErr(e.message); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <div className="music-upload-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="music-upload-modal card pop-in">
+        <div className="music-upload-head">
+          <h3>Редактировать трек</h3>
+          <button className="music-upload-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="music-upload-body">
+          <div className="music-upload-row">
+            <div
+              className={`music-cover-pick-wrap ${coverPreview ? "has-cover" : ""}`}
+              onClick={() => coverRef.current?.click()}
+              title="Обложка"
+            >
+              <input ref={coverRef} type="file" accept=".jpg,.jpeg,.png,.webp" style={{ display: "none" }}
+                onChange={e => pickCover(e.target.files[0])} />
+              {coverPreview
+                ? <img src={coverPreview} className="music-cover-preview" alt="cover" />
+                : <div className="music-cover-placeholder"><Music size={22} /><span>Обложка</span></div>
+              }
+            </div>
+            <div className="music-upload-fields">
+              <div className="music-upload-field-wrap">
+                <input placeholder="Название трека" value={title} onChange={e => setTitle(e.target.value)} maxLength={200} autoFocus />
+              </div>
+              <div className="music-upload-field-wrap">
+                <input placeholder="Исполнитель" value={artist} onChange={e => setArtist(e.target.value)} maxLength={200} />
+              </div>
+              {track.coverUrl && (
+                <label className="music-public-toggle" style={{ marginTop: 4 }}>
+                  <input type="checkbox" checked={removeCover} onChange={e => { if (e.target.checked) handleRemoveCover(); else { setRemoveCover(false); setCoverPreview(assetUrl(track.coverUrl)); } }} />
+                  <span>Удалить обложку</span>
+                </label>
+              )}
+            </div>
+          </div>
+          {err && <div className="err">{err}</div>}
+          <button className="btn accent music-upload-submit" onClick={submit} disabled={busy || !title.trim()}>
+            {busy ? "Сохраняем..." : "Сохранить"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Add to Playlist Popup ────────────────────────────────────
 function AddToPlaylistPopup({ track, token, playlists, onClose }) {
   const t = useT();
@@ -233,12 +327,13 @@ function AddToPlaylistPopup({ track, token, playlists, onClose }) {
 }
 
 // ─── Track Item ───────────────────────────────────────────────
-function TrackItem({ track, token, isPlaying, isCurrent, onPlay, onDelete, onLikeChange, showUploader, playlists, onRemoveFromPlaylist, onArtistClick }) {
+function TrackItem({ track, token, isPlaying, isCurrent, onPlay, onDelete, onEdit, onLikeChange, showUploader, playlists, onRemoveFromPlaylist, onArtistClick }) {
   const t = useT();
   const [liked, setLiked] = useState(track.liked);
   const [showShare, setShowShare] = useState(false);
   const [showAddPlaylist, setShowAddPlaylist] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const moreRef = useRef(null);
   const toast = useToast();
 
@@ -279,7 +374,12 @@ function TrackItem({ track, token, isPlaying, isCurrent, onPlay, onDelete, onLik
         }
       </div>
       <div className="track-info">
-        <div className="track-title">{track.title}</div>
+        <div className="track-title">
+          {track.title}
+          {track.status === "pending" && (
+            <span className="track-pending-badge" title="Ожидает одобрения модератора"><Clock size={11} /> На проверке</span>
+          )}
+        </div>
         <div className="track-artist">
           {track.artist && (
             <button
@@ -312,6 +412,11 @@ function TrackItem({ track, token, isPlaying, isCurrent, onPlay, onDelete, onLik
       {onRemoveFromPlaylist && (
         <button className="track-delete-btn" onClick={e => { e.stopPropagation(); onRemoveFromPlaylist(track); }} title={t("music.track.removePlaylist")}>
           <Trash2 size={15} />
+        </button>
+      )}
+      {onEdit && (
+        <button className="track-share-btn" onClick={e => { e.stopPropagation(); setShowEdit(true); }} title="Редактировать">
+          <Pencil size={15} />
         </button>
       )}
       {onDelete && !onRemoveFromPlaylist && (
@@ -347,6 +452,11 @@ function TrackItem({ track, token, isPlaying, isCurrent, onPlay, onDelete, onLik
                 <Trash2 size={15} /> {t("music.track.removePlaylist")}
               </button>
             )}
+            {onEdit && (
+              <button onClick={() => { setShowEdit(true); setShowMore(false); }}>
+                <Pencil size={15} /> Редактировать
+              </button>
+            )}
             {onDelete && !onRemoveFromPlaylist && (
               <button className="danger" onClick={() => { onDelete(track); setShowMore(false); }}>
                 <Trash2 size={15} /> {t("common.delete")}
@@ -358,6 +468,14 @@ function TrackItem({ track, token, isPlaying, isCurrent, onPlay, onDelete, onLik
 
       {showShare && (
         <ShareTrackModal track={track} token={token} onClose={() => setShowShare(false)} />
+      )}
+      {showEdit && (
+        <EditTrackModal
+          track={track}
+          token={token}
+          onClose={() => setShowEdit(false)}
+          onSaved={updated => { onEdit?.(track.id, updated); setShowEdit(false); }}
+        />
       )}
     </div>
   );
@@ -719,6 +837,13 @@ export default function MusicView({ token, me }) {
     } catch { toast(t("music.track.deleteError"), { type: "error" }); }
   };
 
+  const handleEdit = (id, updated) => {
+    const patch = l => l.map(tr => tr.id === id ? { ...tr, ...updated } : tr);
+    setMyTracks(patch);
+    setFeedTracks(patch);
+    Player.patchCurrentMeta?.(id, updated);
+  };
+
   const handleDeletePlaylist = async (playlist) => {
     if (!(await confirm({ title: t("music.playlist.delete.title"), message: t("music.playlist.delete.msg", { title: playlist.title }), danger: true, okText: t("common.delete") }))) return;
     try {
@@ -890,6 +1015,7 @@ export default function MusicView({ token, me }) {
                   isPlaying={playerState.playing}
                   onPlay={tr => handlePlay(tr, tracks)}
                   onDelete={tab === "my" || trk.userId === me?.id ? handleDelete : null}
+                  onEdit={tab === "my" || trk.userId === me?.id ? handleEdit : null}
                   onLikeChange={onLikeChange}
                   showUploader={tab === "feed"}
                   playlists={playlists}

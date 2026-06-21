@@ -13,7 +13,7 @@ const PTYPE_COLOR = {
   lock_name: "#b56db0", lock_avatar: "#b56db0",
 };
 const TIER_COLOR = { 0: "#888", 1: "#5fa8d3", 2: "#7a7ec8", 3: "#b56db0", 4: "#d99a2b" };
-const ROLE_ICON = { moderator: "🛡", user: "👤" };
+const ROLE_ICON = { moderator: "🛡", musician: "🎵", user: "👤" };
 
 function makePTypeLabel(t) {
   return {
@@ -140,11 +140,18 @@ export default function ModPanelPage({ token }) {
   const [stats, setStats] = useState(null);
   const [broadcastMsg, setBroadcastMsg] = useState("");
   const [trustInput, setTrustInput] = useState("");
+  const [pendingTracks, setPendingTracks] = useState(null);
+  const [pendingLoading, setPendingLoading] = useState(false);
   const toast = useToast();
   const confirm = useConfirm();
 
   useEffect(() => {
     api("/mod/stats", { token }).then(setStats).catch(() => {});
+    setPendingLoading(true);
+    api("/v2/mod/tracks/pending", { token })
+      .then(setPendingTracks)
+      .catch(() => setPendingTracks([]))
+      .finally(() => setPendingLoading(false));
   }, [token]);
 
   const searchFor = async (h) => {
@@ -347,6 +354,64 @@ export default function ModPanelPage({ token }) {
         </div>
       )}
 
+      {(pendingLoading || (pendingTracks && pendingTracks.length > 0)) && (
+        <div className="mp-section">
+          <div className="mp-section-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            🎵 Треки на модерации
+            {pendingTracks && pendingTracks.length > 0 && (
+              <span style={{ background: "#d99a2b22", color: "#d99a2b", border: "1px solid #d99a2b44", borderRadius: 8, fontSize: 11, padding: "1px 7px" }}>{pendingTracks.length}</span>
+            )}
+          </div>
+          {pendingLoading ? (
+            <div className="mp-empty">Загрузка...</div>
+          ) : (
+            <div className="mp-pending-tracks">
+              {pendingTracks.map(trk => (
+                <div key={trk.id} className="mp-pending-track-row">
+                  {trk.coverUrl
+                    ? <img src={assetUrl(trk.coverUrl)} className="mp-pending-cover" alt="" />
+                    : <div className="mp-pending-cover mp-pending-cover-empty">♪</div>
+                  }
+                  <div className="mp-pending-info">
+                    <div className="mp-pending-title">{trk.title}</div>
+                    <div className="mp-pending-meta">
+                      {trk.artist && <span>{trk.artist}</span>}
+                      <button className="btn ghost" style={{ fontSize: 11, padding: "1px 6px" }}
+                        onClick={() => { setHandle(trk.uploaderHandle || ""); searchFor(trk.uploaderHandle || ""); }}>
+                        @{trk.uploaderHandle || "?"} {trk.uploaderName ? `(${trk.uploaderName})` : ""}
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button className="btn accent" style={{ fontSize: 12, padding: "5px 12px" }}
+                      onClick={async () => {
+                        try {
+                          await api(`/v2/mod/tracks/${trk.id}/approve`, { method: "POST", token });
+                          setPendingTracks(l => l.filter(x => x.id !== trk.id));
+                          toast("Трек одобрен", { type: "success" });
+                        } catch (e) { toast(e.message, { type: "error" }); }
+                      }}>
+                      Одобрить
+                    </button>
+                    <button className="btn danger-solid" style={{ fontSize: 12, padding: "5px 12px" }}
+                      onClick={async () => {
+                        if (!(await confirm({ title: "Удалить трек?", message: `«${trk.title}»`, danger: true, okText: "Удалить" }))) return;
+                        try {
+                          await api(`/v2/mod/tracks/${trk.id}/reject`, { method: "POST", token });
+                          setPendingTracks(l => l.filter(x => x.id !== trk.id));
+                          toast("Трек отклонён", { type: "info" });
+                        } catch (e) { toast(e.message, { type: "error" }); }
+                      }}>
+                      Отклонить
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mp-section">
         <div className="mp-section-title">{t("mod.search.title")}</div>
         <div className="mp-search-row">
@@ -368,8 +433,8 @@ export default function ModPanelPage({ token }) {
               <div className="mp-user-name">{details.name} <span className="mp-user-role-ico">{ROLE_ICON[details.role] || "👤"}</span></div>
               <div className="mp-user-handle">@{details.handle}</div>
               <div className="mp-user-pills">
-                <span className="mp-pill" style={{ background: details.role === "moderator" ? "var(--accent)" : "var(--surface)", color: details.role === "moderator" ? "#fff" : "var(--ink-soft)" }}>
-                  {details.role === "moderator" ? t("mod.role.moderator") : t("mod.role.user")}
+                <span className="mp-pill" style={{ background: details.role === "moderator" ? "var(--accent)" : details.role === "musician" ? "#7a7ec822" : "var(--surface)", color: details.role === "moderator" ? "#fff" : details.role === "musician" ? "#7a7ec8" : "var(--ink-soft)" }}>
+                  {details.role === "moderator" ? t("mod.role.moderator") : details.role === "musician" ? "🎵 Музыкант" : t("mod.role.user")}
                 </span>
                 {details.subscription_tier > 0 && (
                   <span className="mp-pill mp-pill-tier" style={{ color: TIER_COLOR[details.subscription_tier] }}>
@@ -514,9 +579,9 @@ export default function ModPanelPage({ token }) {
           {tab === "role" && (
             <div className="mp-tab-body">
               <div className="mp-role-current">
-                <div className="mp-role-big-icon">{details.role === "moderator" ? "🛡" : "👤"}</div>
+                <div className="mp-role-big-icon">{details.role === "moderator" ? "🛡" : details.role === "musician" ? "🎵" : "👤"}</div>
                 <div>
-                  <div className="mp-role-name">{details.role === "moderator" ? t("mod.role.moderator") : t("mod.role.user")}</div>
+                  <div className="mp-role-name">{details.role === "moderator" ? t("mod.role.moderator") : details.role === "musician" ? "Музыкант" : t("mod.role.user")}</div>
                   {details.id === 1 && <div className="mp-role-lock">{t("mod.role.superlock")}</div>}
                 </div>
               </div>
@@ -525,7 +590,25 @@ export default function ModPanelPage({ token }) {
               ) : details.id !== 1 ? (
                 <button className="btn ghost danger" style={{ width: "100%", marginTop: 12 }} onClick={() => changeRole("user")}>{t("mod.role.demote.btn")}</button>
               ) : null}
+              {details.role !== "moderator" && (
+                <button
+                  className={`btn ${details.role === "musician" ? "ghost danger" : "ghost"}`}
+                  style={{ width: "100%", marginTop: 8 }}
+                  onClick={async () => {
+                    try {
+                      const grant = details.role !== "musician";
+                      await api(`/v2/mod/users/${searchHandle}/musician`, { method: "POST", token, body: { grant } });
+                      const det = await api(`/mod/user/${searchHandle}`, { token });
+                      setDetails(det);
+                      toast(grant ? "Роль Музыкант выдана" : "Роль Музыкант снята", { type: "success" });
+                    } catch (e) { toast(e.message, { type: "error" }); }
+                  }}
+                >
+                  {details.role === "musician" ? "🎵 Снять роль Музыкант" : "🎵 Выдать роль Музыкант"}
+                </button>
+              )}
               <p className="mp-role-hint">{t("mod.role.hint")}</p>
+              <p className="mp-role-hint" style={{ marginTop: 4 }}>Музыкант: треки загружаются без проверки модератора.</p>
             </div>
           )}
 
