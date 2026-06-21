@@ -1,0 +1,113 @@
+/* ══════════════════════════════════════════════════════════════
+   34. Анимации (keyframes, скелетон, конфетти)
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px) scale(0.99); } to { opacity: 1; transform: none; } }
+.rise { animation: rise-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fade 0.35s ease both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { 0% { opacity: 0; transform: scale(0.94) translateY(8px); } 100% { opacity: 1; transform: none; } }
+.pop-in { animation: pop 0.4s cubic-bezier(0.2, 0.9, 0.25, 1.1) both; }
+@keyframes slide { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.slide-in { animation: slide 0.35s ease both; }
+@keyframes shake { 0%,100% { transform: translateX(0);} 20%{transform:translateX(-5px);} 40%{transform:translateX(5px);} 60%{transform:translateX(-3px);} 80%{transform:translateX(3px);} }
+.shake { animation: shake 0.4s ease; }
+@keyframes swap-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.view-swap .screen { animation: swap-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.wrap-messages .view-swap { display: flex; flex-direction: column; flex: 1; overflow: hidden; height: 100%; }
+
+@keyframes heart-pulse { 0% { transform: scale(1); } 35% { transform: scale(1.45); } 60% { transform: scale(0.9); } 100% { transform: scale(1); } }
+.act.pulse svg { animation: heart-pulse 0.45s ease; }
+
+@keyframes remove-out {
+  0% { opacity: 1; transform: translateX(0) scale(1); max-height: 600px; }
+  40% { opacity: 0; transform: translateX(40px) scale(0.97); }
+  100% { opacity: 0; transform: translateX(40px) scale(0.95); max-height: 0; margin: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
+}
+.post.removing { animation: remove-out 0.45s cubic-bezier(0.4, 0, 0.5, 1) forwards; overflow: hidden; pointer-events: none; }
+.comment.removing { animation: remove-out 0.38s cubic-bezier(0.4, 0, 0.5, 1) forwards; overflow: hidden; pointer-events: none; }
+.no-anim .post.removing, .no-anim .comment.removing { animation: none; opacity: 0; }
+
+@keyframes spoiler-reveal { from { filter: blur(4px); opacity: 0.4; } to { filter: blur(0); opacity: 1; } }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes tip-in { from { opacity: 0; transform: translate(var(--tx,-50%), var(--ty,-100%)) scale(0.96); } }
+
+@keyframes mod-glow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes comment-flash {
+  0%, 30% { background: var(--accent-soft); box-shadow: 0 0 0 6px var(--accent-soft); }
+  100% { background: transparent; box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes collab-flash {
+  0% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent); }
+  70% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent); }
+  100% { box-shadow: none; }
+}
+
+@keyframes whisper-glow {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; border-color: color-mix(in srgb, #7a6ed0 20%, var(--line)); }
+  50% { box-shadow: 0 0 14px color-mix(in srgb, #7a6ed0 18%, transparent); border-color: color-mix(in srgb, #7a6ed0 45%, var(--line)); }
+}
+@keyframes collab-glow {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; border-color: color-mix(in srgb, #3aa99a 20%, var(--line)); }
+  50% { box-shadow: 0 0 14px color-mix(in srgb, #3aa99a 18%, transparent); border-color: color-mix(in srgb, #3aa99a 45%, var(--line)); }
+}
+
+@keyframes xp-shimmer { 0%,100% { filter: drop-shadow(0 0 4px rgba(255,179,71,0.4)); } 50% { filter: drop-shadow(0 0 10px rgba(255,179,71,0.9)); } }
+
+@keyframes critPulse { from { box-shadow: 0 -4px 32px rgba(214,95,122,0.25); } to { box-shadow: 0 -4px 48px rgba(214,95,122,0.55); } }
+
+@keyframes dtpFadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+@keyframes dmFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes msgSlideL { from { opacity:0; transform: translateX(-12px) scale(.98); } to { opacity:1; transform: none; } }
+@keyframes msgSlideR { from { opacity:0; transform: translateX(12px) scale(.98); } to { opacity:1; transform: none; } }
+@keyframes msgPop { 0%{transform:scale(.9)} 60%{transform:scale(1.04)} 100%{transform:scale(1)} }
+
+@keyframes pollFlash {
+  0% { background-color: var(--accent); opacity: 0.18; }
+  100% { background-color: transparent; opacity: 1; }
+}
+
+/* Конфетти */
+.confetti-piece {
+  position: fixed; z-index: 9998; pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: confetti-fly 0.9s cubic-bezier(0.15, 0.6, 0.4, 1) forwards;
+  will-change: transform, opacity;
+}
+@keyframes confetti-fly {
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(140deg); opacity: 0; }
+}
+
+/* Скелетон загрузки ленты */
+.post.skeleton { pointer-events: none; }
+.sk-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.sk-av { width: 42px; height: 42px; border-radius: 50%; flex: none; }
+.sk-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.sk-line { height: 12px; border-radius: 6px; }
+.sk-av, .sk-line {
+  background: linear-gradient(90deg, var(--bg-warm) 25%, var(--line) 37%, var(--bg-warm) 63%);
+  background-size: 400% 100%; animation: sk-shimmer 1.3s ease-in-out infinite;
+}
+.sk-line.w90 { width: 90%; } .sk-line.w70 { width: 70%; } .sk-line.w40 { width: 40%; } .sk-line.w20 { width: 20%; }
+.sk-line + .sk-line { margin-top: 10px; }
+@keyframes sk-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+.no-anim .sk-av, .no-anim .sk-line { animation: none; opacity: 0.5; }
+
+/* Класс для отключения анимаций из настроек */
+.no-anim *, .no-anim *::before, .no-anim *::after { animation: none !important; transition: none !important; }
+.no-anim .mod-nick { animation: none; }
+.no-anim .tip { animation: none; }
+.no-anim .toast-in, .no-anim .toast-in .toast-msg { animation: none; }
+.no-anim .toast-out { animation: none; opacity: 0; }
+.no-anim .toast-bar { display: none; }

@@ -1,0 +1,38 @@
+/* ══════════════════════════════════════════════════════════════
+   19. Эмодзи-пикер
+   ══════════════════════════════════════════════════════════════ */
+.emoji-pop {
+  position: fixed; z-index: 9000;
+  width: 340px; max-width: 94vw;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-lift);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.emoji-search-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 10px 8px; border-bottom: 1px solid var(--line);
+}
+.emoji-search-ico { color: var(--ink-faint); flex: none; }
+.emoji-search {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-size: 13px; color: var(--ink); min-width: 0;
+}
+.emoji-search::placeholder { color: var(--ink-faint); }
+.emoji-search-clear { font-size: 11px; color: var(--ink-faint); background: none; border: none; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
+.emoji-search-clear:hover { color: var(--ink); background: var(--surface); }
+.emoji-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.emoji-tab { font-size: 17px; padding: 6px 8px; border-radius: 8px; background: transparent; transition: background 0.12s, opacity 0.12s; flex: none; opacity: 0.55; }
+.emoji-tab:hover { background: var(--surface); opacity: 1; }
+.emoji-tab.on { background: var(--accent-soft); opacity: 1; }
+.emoji-cat-label { font-size: 11px; color: var(--ink-faint); padding: 6px 12px 2px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.03em; }
+.emoji-grid {
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; padding: 4px 8px 10px;
+  max-height: 230px; overflow-y: auto; overflow-x: hidden;
+}
+.emoji-cell { font-size: 20px; padding: 5px; border-radius: 8px; background: transparent; transition: transform 0.1s ease, background 0.12s ease; aspect-ratio: 1; display: grid; place-items: center; }
+.emoji-cell:hover { background: var(--surface); transform: scale(1.25); }
+.emoji-empty { grid-column: 1 / -1; text-align: center; color: var(--ink-faint); padding: 28px 0; font-size: 14px; }
+
+.emoji-footer { padding: 6px 10px 8px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; }
+.emoji-done { font-size: 12px; padding: 5px 14px; border-radius: 20px; background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); font-family: var(--font-body); cursor: pointer; transition: background 0.12s; }
+.emoji-done:hover { background: color-mix(in srgb, var(--accent) 20%, var(--surface)); }
+
