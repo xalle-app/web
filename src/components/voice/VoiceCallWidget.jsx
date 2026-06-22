@@ -8,11 +8,12 @@ import { assetUrl } from "../../lib/config.js";
 function MemberAvatar({ member, speaking, muted }) {
   const initials = (member?.name || "?")[0];
   return (
-    <div className={`vc-member${speaking ? " vc-speaking" : ""}`} title={member?.name}>
+    <div className={`vc-member${speaking ? " vc-speaking" : ""}`}>
       {member?.avatar
         ? <img src={assetUrl(member.avatar)} className="vc-av" alt={member.name} />
         : <div className="vc-av vc-av-letter">{initials}</div>}
       {muted && <div className="vc-muted-icon"><MicOff size={9} /></div>}
+      <div className="vc-member-name">{member?.name?.split(" ")[0] || "@" + member?.handle}</div>
     </div>
   );
 }
@@ -185,16 +186,17 @@ export function IncomingCallBanner({ voiceCall }) {
   };
 
   return createPortal(
-    <div className="vc-incoming pop-in">
+    <div className="vc-incoming">
       <div className="vc-incoming-avatar">
         {callerAvatar
           ? <img src={assetUrl(callerAvatar)} alt={callerName} />
           : <div className="vc-incoming-letter">{(callerName || "?")[0]}</div>}
         <div className="vc-incoming-ring" />
+        <div className="vc-incoming-ring2" />
       </div>
       <div className="vc-incoming-info">
         <div className="vc-incoming-name">{callerName || t("vcall.incoming.unknown")}</div>
-        <div className="vc-incoming-label">{t("vcall.incoming.label")}</div>
+        <div className="vc-incoming-label"><Phone size={11} />{t("vcall.incoming.label")}</div>
       </div>
       <div className="vc-incoming-actions">
         <button className="vc-incoming-btn vc-incoming-accept" onClick={accept} title={t("vcall.incoming.accept")}>

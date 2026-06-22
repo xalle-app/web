@@ -138,6 +138,7 @@ function AppInner({ settings, setSettings, settingsLoaded, setSettingsLoaded, se
   const [loading, setLoading] = useState(true);
   const [focusPost, setFocusPost] = useState(null);
   const [notifBump, setNotifBump] = useState(0);
+  const [notifUnread, setNotifUnread] = useState(0);
   const [doc, setDoc] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -313,7 +314,7 @@ function AppInner({ settings, setSettings, settingsLoaded, setSettingsLoaded, se
           }
           else if (m.type === "comments") setCommentBump((n) => n + 1);
           else if (m.type === "online") setOnline(m.count);
-          else if (m.type === "notif") setNotifBump((n) => n + 1);
+          else if (m.type === "notif") { setNotifBump((n) => n + 1); setNotifUnread(n => n + 1); }
           else if (m.type === "reports") setReportsBump((n) => n + 1);
           else if (m.type === "feedback") setFeedbackBump((n) => n + 1);
           else if (m.type === "collabs") setCollabsBump((n) => n + 1);
@@ -610,6 +611,12 @@ function AppInner({ settings, setSettings, settingsLoaded, setSettingsLoaded, se
     return () => window.removeEventListener("music:play", h);
   }, [token]);
 
+  // Browser tab: show unread count in title
+  useEffect(() => {
+    const total = (dmUnread || 0) + (notifUnread || 0);
+    document.title = total > 0 ? `(${total}) Xalle` : "Xalle";
+  }, [dmUnread, notifUnread]);
+
   const triggerRelogin = (acc) => {
     prevSessionRef.current = session;
     setReloginHandle(acc.handle);
@@ -842,7 +849,7 @@ function AppInner({ settings, setSettings, settingsLoaded, setSettingsLoaded, se
 
   return (
     <div className={`layout ${view === "messages" ? "layout-dm" : ""}`}>
-      <Sidebar view={view} setView={(v) => { if (v === "settings") { setShowSettings(true); return; } navigateTo(v); if (v === "messages") setDmUnread(0); }} liveConn={liveConn} online={online} onLogout={logout} token={token} notifBump={notifBump} onOpenPost={onOpenPost} menuStyle="text-icons" onShowDoc={setDoc} isMod={me?.role === "moderator"} pendingReports={pendingReports} openFeedback={openFeedback} onFeedback={() => setShowFeedback(true)} onGoCollabs={(postId) => { navigateTo("collabs"); setHighlightCollab(postId); setTimeout(() => setHighlightCollab(null), 2500); }} onShowChangelog={() => setShowChangelog(true)} currentVersion={currentVersion} dmUnread={dmUnread} me={me} accounts={getAccounts()} onSwitchAccount={switchAccount} onAddAccount={() => handleSettingsLogout("add")} safeMode={settings.safeMode} onVoiceCall={() => setShowVoiceDialog(true)} voiceCallActive={voiceCall.active} />
+      <Sidebar view={view} setView={(v) => { if (v === "settings") { setShowSettings(true); return; } navigateTo(v); if (v === "messages") setDmUnread(0); }} liveConn={liveConn} online={online} onLogout={logout} token={token} notifBump={notifBump} onNotifRead={() => setNotifUnread(0)} onOpenPost={onOpenPost} menuStyle="text-icons" onShowDoc={setDoc} isMod={me?.role === "moderator"} pendingReports={pendingReports} openFeedback={openFeedback} onFeedback={() => setShowFeedback(true)} onGoCollabs={(postId) => { navigateTo("collabs"); setHighlightCollab(postId); setTimeout(() => setHighlightCollab(null), 2500); }} onShowChangelog={() => setShowChangelog(true)} currentVersion={currentVersion} dmUnread={dmUnread} me={me} accounts={getAccounts()} onSwitchAccount={switchAccount} onAddAccount={() => handleSettingsLogout("add")} safeMode={settings.safeMode} onVoiceCall={() => setShowVoiceDialog(true)} voiceCallActive={voiceCall.active} />
 
       <main className={`wrap ${view === "messages" ? "wrap-messages" : ""}`} style={view === "messages" ? { maxWidth: "100%", padding: 0, overflow: "hidden" } : {}}>
         <div className={`view-swap ${view}`}>

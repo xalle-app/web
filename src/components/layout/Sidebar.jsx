@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { UsersRound, BookAlert, CalendarDays, Lightbulb, Shield, Sparkles, Settings2, House, User, LogOut, MessageCircle, ChevronDown, Plus, UserCheck, Trash2, Music, Flame, X, AlertCircle, Phone } from "lucide-react";
 import Tip from "../shared/Tip.jsx";
@@ -163,11 +163,18 @@ function AccountSwitcher({ me, accounts, onSwitchAccount, onAddAccount, onLogout
   );
 }
 
-export default function Sidebar({ view, setView, liveConn, online, onLogout, token, notifBump, onOpenPost, menuStyle = "text-icons", onShowDoc, isMod, pendingReports = 0, openFeedback = 0, onFeedback, onGoCollabs, onShowChangelog, currentVersion = "1.0.0", dmUnread = 0, me, accounts = [], onSwitchAccount, onAddAccount, safeMode, onVoiceCall, voiceCallActive = false }) {
+export default function Sidebar({ view, setView, liveConn, online, onLogout, token, notifBump, onNotifRead, onOpenPost, menuStyle = "text-icons", onShowDoc, isMod, pendingReports = 0, openFeedback = 0, onFeedback, onGoCollabs, onShowChangelog, currentVersion = "1.0.0", dmUnread = 0, me, accounts = [], onSwitchAccount, onAddAccount, safeMode, onVoiceCall, voiceCallActive = false }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showAccManager, setShowAccManager] = useState(false);
   const t = useT();
   const confirm = useConfirm();
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return t("sidebar.greetMorning");
+    if (h >= 12 && h < 17) return t("sidebar.greetDay");
+    if (h >= 17 && h < 23) return t("sidebar.greetEvening");
+    return t("sidebar.greetNight");
+  }, [t]);
   const nav = isMod
     ? [...NAV_KEYS, ["reports", "nav.reports"], ["feedback", "nav.feedback"], ["modpanel", "nav.modpanel"]]
     : NAV_KEYS;
@@ -216,7 +223,7 @@ export default function Sidebar({ view, setView, liveConn, online, onLogout, tok
               <span className="online-text">{liveConn ? <>онлайн: <b>{online}</b></> : "связь…"}</span>
             </div>
           </Tip>
-          <Notifications token={token} bump={notifBump} onOpenPost={onOpenPost} onGoCollabs={onGoCollabs} />
+          <Notifications token={token} bump={notifBump} onRead={onNotifRead} onOpenPost={onOpenPost} onGoCollabs={onGoCollabs} />
           {onVoiceCall && (
             <Tip content={t("vcall.sidebar.btn")} pos="bottom">
               <button className={`side-voice-btn${voiceCallActive ? " side-voice-btn-active" : ""}`} onClick={onVoiceCall}>
@@ -230,6 +237,9 @@ export default function Sidebar({ view, setView, liveConn, online, onLogout, tok
           {nav.map(([k, l]) => item(k, l))}
         </nav>
         <div className="side-bottom">
+          {me && (
+            <div className="side-greeting">{greeting}, <b>{me.name?.split(" ")[0]}</b></div>
+          )}
           {me?.streak?.streak_days > 0 && (
             <div className="streak-badge" title={t("sidebar.streakTitle", { days: me.streak.streak_days, best: me.streak.streak_best })}>
               <Flame size={14} className="streak-flame" />
@@ -261,7 +271,7 @@ export default function Sidebar({ view, setView, liveConn, online, onLogout, tok
             <i className={`live-dot ${liveConn ? "on" : ""}`} />
             <span className="mobile-online-count">{liveConn ? online : "—"}</span>
           </div>
-          <Notifications token={token} bump={notifBump} onOpenPost={onOpenPost} onGoCollabs={onGoCollabs} />
+          <Notifications token={token} bump={notifBump} onRead={onNotifRead} onOpenPost={onOpenPost} onGoCollabs={onGoCollabs} />
           {onVoiceCall && (
             <button className={`side-voice-btn${voiceCallActive ? " side-voice-btn-active" : ""}`} onClick={onVoiceCall}>
               <Phone size={15} />

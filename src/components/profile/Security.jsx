@@ -248,7 +248,7 @@ function EmailVerification({ token }) {
     catch (e) { toast(e.message, { type: "error" }); }
   };
 
-  if (!status) return null;
+  if (!status) return <div className="ev-card-skeleton" />;
 
   return (
     <div className="card ev-card">

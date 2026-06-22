@@ -6,7 +6,7 @@ import { CheckBadge, ModBadge } from "../shared/icons.jsx";
 import { Bell } from "lucide-react";
 import { useT } from "../../contexts/I18nContext.jsx";
 
-export default function Notifications({ token, bump, onOpenPost, onGoCollabs }) {
+export default function Notifications({ token, bump, onRead, onOpenPost, onGoCollabs }) {
   const t = useT();
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
@@ -43,7 +43,7 @@ export default function Notifications({ token, bump, onOpenPost, onGoCollabs }) 
     if (r) setCoords({ x: Math.min(r.left, window.innerWidth - 340), y: r.bottom + 8 });
   };
   const toggle = () => {
-    if (!open) { place(); setOpen(true); if (unread) api("/notifications/read", { method: "POST", token }).then(() => setItems((cur) => cur.map((n) => ({ ...n, read: true })))).catch(() => {}); }
+    if (!open) { place(); setOpen(true); onRead?.(); if (unread) api("/notifications/read", { method: "POST", token }).then(() => setItems((cur) => cur.map((n) => ({ ...n, read: true })))).catch(() => {}); }
     else setOpen(false);
   };
   useEffect(() => {

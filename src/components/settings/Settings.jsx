@@ -237,17 +237,17 @@ export default function Settings({ settings, setSettings, token, me, onMeUpdate,
   // ─── Section renderers ──────────────────────────────────────────
   const renderSection = (secId) => {
     switch (secId) {
-      case "profile": return <ProfileSection />;
-      case "security": return <SecuritySection />;
-      case "theme": return <ThemeSection />;
-      case "exclusive": return <ExclusiveSection />;
-      case "interface": return <InterfaceSection />;
-      case "overview": return <NotifSection />;
-      case "sounds": return <SoundsSection />;
-      case "feed": return <FeedSection />;
-      case "messages": return <MessagesSection />;
-      case "advanced": return <AdvancedSection />;
-      case "privacy": return <PrivacySection />;
+      case "profile": return ProfileSection();
+      case "security": return SecuritySection();
+      case "theme": return ThemeSection();
+      case "exclusive": return ExclusiveSection();
+      case "interface": return InterfaceSection();
+      case "overview": return NotifSection();
+      case "sounds": return SoundsSection();
+      case "feed": return FeedSection();
+      case "messages": return MessagesSection();
+      case "advanced": return AdvancedSection();
+      case "privacy": return PrivacySection();
       default: return null;
     }
   };

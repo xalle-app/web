@@ -297,6 +297,7 @@
 
 /* ===== Email Verification card ===== */
 .ev-card { padding: 0; overflow: hidden; }
+.ev-card-skeleton { height: 72px; border-radius: 14px; background: var(--bg-warm); }
 .ev-verified-badge {
   font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
   background: color-mix(in srgb, #4caf72 16%, transparent);

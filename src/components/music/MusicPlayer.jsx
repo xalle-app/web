@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Repeat1, Shuffle, ChevronDown, X, Heart, Music } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Repeat1, Shuffle, ChevronDown, X, Heart, Music, Timer } from "lucide-react";
 import * as Player from "../../lib/player.js";
 import { api } from "../../lib/api.js";
 import { assetUrl } from "../../lib/config.js";
@@ -11,11 +11,18 @@ function fmt(sec) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+const SLEEP_PRESETS = [10, 15, 20, 30, 45, 60];
+
 export default function MusicPlayer({ onOpenLibrary, token, onLikeChange, isListenGuest }) {
   const [state, setState] = useState(Player.getState());
   const [hidden, setHidden] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
+  const [sleepMins, setSleepMins] = useState(null);
+  const [sleepLeft, setSleepLeft] = useState(null);
+  const [showSleep, setShowSleep] = useState(false);
+  const sleepRef = useRef(null);
+  const sleepWrapRef = useRef(null);
   const volRef = useRef(null);
   const lastTrackId = useRef(null);
 
@@ -39,6 +46,45 @@ export default function MusicPlayer({ onOpenLibrary, token, onLikeChange, isList
   useEffect(() => {
     if (state.current) setHidden(false);
   }, [state.current?.id]);
+
+  // Close sleep popup on outside click
+  useEffect(() => {
+    if (!showSleep) return;
+    const h = (e) => { if (!sleepWrapRef.current?.contains(e.target)) setShowSleep(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [showSleep]);
+
+  // Sleep timer countdown
+  useEffect(() => {
+    if (!sleepMins) { setSleepLeft(null); return; }
+    const endAt = Date.now() + sleepMins * 60000;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      setSleepLeft(left);
+      if (left <= 0) { Player.stop(); setSleepMins(null); clearInterval(sleepRef.current); }
+    };
+    tick();
+    sleepRef.current = setInterval(tick, 1000);
+    return () => clearInterval(sleepRef.current);
+  }, [sleepMins]);
+
+  // Keyboard shortcuts: Space = play/pause, ArrowLeft/Right = seek ±5s, MediaKeys
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement?.isContentEditable) return;
+      if (!Player.getState().current) return;
+      if (e.code === "Space") { e.preventDefault(); if (!isListenGuest) Player.toggle(); }
+      else if (e.code === "ArrowLeft" && e.altKey) { e.preventDefault(); Player.prev(); }
+      else if (e.code === "ArrowRight" && e.altKey) { e.preventDefault(); Player.next(); }
+      else if (e.code === "MediaPlayPause") { e.preventDefault(); if (!isListenGuest) Player.toggle(); }
+      else if (e.code === "MediaTrackNext") { e.preventDefault(); Player.next(); }
+      else if (e.code === "MediaTrackPrevious") { e.preventDefault(); Player.prev(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isListenGuest]);
 
   const toggleLike = async () => {
     if (!state.current || !token || likeBusy) return;
@@ -69,7 +115,7 @@ export default function MusicPlayer({ onOpenLibrary, token, onLikeChange, isList
             ? <img src={assetUrl(current.coverUrl)} alt="" />
             : <Music size={14} />
           }
-          {playing && <div className="mp-float-playing-dot" />}
+          {playing && <div className="mp-float-playing-dot"><span/><span/><span/></div>}
         </div>
         <div className="mp-float-info">
           <div className="mp-float-title">{current.title}</div>
@@ -148,6 +194,26 @@ export default function MusicPlayer({ onOpenLibrary, token, onLikeChange, isList
           <input type="range" min={0} max={1} step={0.02} value={volume}
             onChange={e => Player.setVolume(parseFloat(e.target.value))}
             className="mp-vol-slider" title={`Громкость: ${Math.round(volume * 100)}%`} />
+        </div>
+        <div className="mp-sleep-wrap" ref={sleepWrapRef}>
+          <button
+            className={`mp-btn mp-sleep-btn${sleepMins ? " mp-btn-active" : ""}`}
+            onClick={() => setShowSleep(v => !v)}
+            title={sleepMins ? `Таймер сна: осталось ${Math.floor(sleepLeft/60)}:${String(sleepLeft%60).padStart(2,"0")}` : "Таймер сна"}
+          >
+            <Timer size={16} />
+          </button>
+          {sleepLeft != null && <span className="mp-sleep-badge">{Math.floor(sleepLeft/60)}:{String(sleepLeft%60).padStart(2,"0")}</span>}
+          {showSleep && (
+            <div className="mp-sleep-popup">
+              {sleepMins && <button className="mp-sleep-opt mp-sleep-cancel" onClick={() => { setSleepMins(null); setSleepLeft(null); setShowSleep(false); }}>Отмена</button>}
+              {SLEEP_PRESETS.map(m => (
+                <button key={m} className={`mp-sleep-opt${sleepMins === m ? " active" : ""}`} onClick={() => { setSleepMins(m); setShowSleep(false); }}>
+                  {m < 60 ? `${m} мин` : `${m/60} ч`}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <button className="mp-btn" onClick={() => setHidden(true)} title="Свернуть плеер">
           <ChevronDown size={16} />

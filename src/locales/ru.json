@@ -32,6 +32,10 @@
   "sidebar.streakDays5": "дней подряд",
   "sidebar.streakDays": "дней",
   "sidebar.streakTitle": "Ритм: {days} дней · Рекорд: {best}",
+  "sidebar.greetMorning": "Доброе утро",
+  "sidebar.greetDay": "Добрый день",
+  "sidebar.greetEvening": "Добрый вечер",
+  "sidebar.greetNight": "Доброй ночи",
 
   "common.save": "Сохранить",
   "common.cancel": "Отмена",

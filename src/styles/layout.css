@@ -166,3 +166,129 @@
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.3); }
 }
+
+/* ─── Мобильный хедер + дропдаун меню ────────────────────────── */
+/* Скрыт на десктопе, виден только на мобильных */
+.mobile-top {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  position: sticky; top: 0; z-index: 620;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+}
+.mobile-top .brand { font-size: 24px; font-family: var(--font-display); font-weight: 700; cursor: pointer; }
+.mobile-top-right { display: flex; align-items: center; gap: 8px; }
+.mobile-online-wrap { display: flex; align-items: center; gap: 5px; }
+.mobile-online-count { font-size: 12px; font-family: var(--font-mono); color: var(--ink-faint); }
+
+/* Бургер-кнопка */
+.burger {
+  width: 34px; height: 34px; border: none; background: var(--bg-warm);
+  border-radius: 10px; cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.burger span { display: block; width: 16px; height: 2px; background: var(--ink-soft); border-radius: 2px; transition: all 0.2s; transform-origin: center; }
+.burger.on span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.burger.on span:nth-child(2) { opacity: 0; }
+.burger.on span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Затемнение при открытом меню */
+.mobile-overlay {
+  position: fixed; inset: 0; z-index: 630;
+  background: rgba(0,0,0,0.4);
+  animation: fadeIn 0.18s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Дропдаун-панель */
+.mobile-dropdown {
+  position: fixed; top: 57px; right: 0; bottom: 0; z-index: 640;
+  width: 260px;
+  background: var(--surface); border-left: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 0;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.22s cubic-bezier(0.32, 0, 0.67, 0);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.12);
+}
+.mobile-dropdown.open {
+  transform: translateX(0);
+  transition: transform 0.22s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* Аккаунт-секция */
+.md-account-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.md-account-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.md-account-name { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.md-account-handle { font-size: 12px; color: var(--ink-faint); }
+.md-account-manage-btn {
+  flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--accent);
+  background: var(--accent-soft); border: none; border-radius: 8px;
+  padding: 5px 10px; cursor: pointer; transition: opacity 0.15s;
+}
+.md-account-manage-btn:hover { opacity: 0.8; }
+
+/* Стрик */
+.md-streak {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+  font-size: 13px; color: var(--ink-soft);
+}
+.md-streak-flame { color: #e98030; flex-shrink: 0; }
+.md-streak-days { font-weight: 700; color: var(--ink); }
+.md-streak-label { color: var(--ink-faint); }
+
+/* Навигация */
+.md-nav { display: flex; flex-direction: column; padding: 8px 8px; gap: 2px; }
+.md-nav button {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px; border-radius: 12px;
+  background: transparent; border: none; cursor: pointer;
+  font-size: 15px; font-weight: 500; color: var(--ink-soft);
+  text-align: left; transition: background 0.15s, color 0.15s;
+  width: 100%;
+}
+.md-nav button:hover { background: var(--bg-warm); color: var(--ink); }
+.md-nav button.on { background: var(--ink); color: var(--surface); }
+.md-nav button.logout { color: var(--like); }
+.md-nav button.logout:hover { background: color-mix(in srgb, var(--like) 10%, transparent); }
+.md-nav .nav-ico { width: 18px; height: 18px; flex-shrink: 0; display: inline-flex; }
+.md-nav .nav-ico svg { width: 100%; height: 100%; }
+.md-nav .nav-badge { font-size: 10px; font-weight: 700; background: #e23b3b; color: #fff; border-radius: 999px; min-width: 17px; height: 17px; display: grid; place-items: center; padding: 0 4px; margin-left: auto; }
+
+/* Документы/ссылки */
+.md-docs {
+  margin-top: auto; padding: 12px 16px 20px;
+  border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.md-docs button {
+  background: none; border: none; cursor: pointer;
+  font-size: 12px; color: var(--ink-faint); text-align: left;
+  padding: 0; transition: color 0.15s;
+}
+.md-docs button:hover { color: var(--accent); }
+.md-version { font-size: 11px; color: var(--ink-faint); cursor: pointer; margin-top: 4px; }
+.md-copy { font-size: 10px; color: var(--ink-faint); opacity: 0.6; }
+
+/* Показываем мобильный хедер только на маленьких экранах */
+@media (max-width: 680px) {
+  .mobile-top { display: flex; }
+  .sidebar { display: none; }
+  .layout { padding: 0; gap: 0; }
+  .wrap { padding: 0 12px; }
+}
+
+/* Средние экраны — боковая панель без текста */
+@media (min-width: 681px) {
+  .mobile-top { display: none !important; }
+  .mobile-dropdown { display: none !important; }
+  .mobile-overlay { display: none !important; }
+}
